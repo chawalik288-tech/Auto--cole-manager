@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auto École Manager — منصة إدارة مدارس تعليم السياقة</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Tahoma,sans-serif;background:#f4f7fb;color:#172033}
+header{background:linear-gradient(135deg,#111827,#2563eb);color:white;padding:18px 20px;position:sticky;top:0;z-index:5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1200px;margin:auto}.brand{font-size:20px;font-weight:800}.small{font-size:12px;opacity:.8}
+.container{max-width:1200px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:white;border-radius:16px;padding:18px;box-shadow:0 5px 20px #17203312}.stat{font-size:28px;font-weight:800;margin-top:7px}.muted{color:#64748b}
+nav{display:flex;gap:8px;overflow:auto;padding:12px 0;margin-bottom:8px}button,.btn{border:0;border-radius:10px;padding:11px 15px;background:#2563eb;color:white;font-weight:700;cursor:pointer}button.secondary{background:#e8eef8;color:#1e3a8a}button.danger{background:#dc2626}
+section{display:none}.active{display:block}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d7deea;border-radius:10px;background:#fff;margin-top:6px}label{display:block;margin-bottom:12px;font-weight:700;font-size:14px}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:11px;border-bottom:1px solid #edf0f5;text-align:right}th{background:#f8fafc}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#e0f2fe;color:#075985;font-size:12px;font-weight:700}
+.login{max-width:430px;margin:70px auto}.login h1{margin-bottom:5px}.logo{font-size:42px;margin-bottom:8px}
+.hidden{display:none!important}.notice{padding:12px;border-radius:10px;background:#eff6ff;margin:10px 0}.actions{white-space:nowrap}
+@media(max-width:600px){header{position:relative}.container{padding:12px}.card{padding:14px}th,td{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="container">
+  <div class="card login">
+    <div class="logo">🚗</div>
+    <h1>منصة إدارة مدارس تعليم السياقة</h1>
+    <p class="muted">نسخة تشغيل محلية مجانية — البيانات تحفظ على هذا الجهاز.</p>
+    <label>رمز المسؤول
+      <input id="loginCode" type="password" placeholder="أدخل الرمز">
+    </label>
+    <button onclick="login()">دخول المسؤول</button>
+    <p class="small" style="margin-top:12px">الرمز الأولي: 1234 — غيّره من الإعدادات.</p>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+<header><div class="top"><div><div class="brand">🚗 Auto École Manager</div><div class="small">منصة إدارة مدارس تعليم السياقة</div></div><button class="secondary" onclick="logout()">خروج</button></div></header>
+<div class="container">
+<nav>
+<button onclick="show('dashboard')">الرئيسية</button>
+<button onclick="show('candidates')">المرشحون</button>
+<button onclick="show('training')">التكوين والساعات</button>
+<button onclick="show('payments')">الدفوعات</button>
+<button onclick="show('exams')">الامتحانات</button>
+<button onclick="show('settings')">الإعدادات</button>
+</nav>
+
+<section id="dashboard" class="active">
+<h2>لوحة القيادة</h2>
+<div class="grid">
+<div class="card"><div class="muted">عدد المرشحين</div><div class="stat" id="sCandidates">0</div></div>
+<div class="card"><div class="muted">ساعات التكوين</div><div class="stat" id="sHours">0</div></div>
+<div class="card"><div class="muted">المبلغ المدفوع</div><div class="stat" id="sPaid">0 د.ت</div></div>
+<div class="card"><div class="muted">الامتحانات القادمة</div><div class="stat" id="sExams">0</div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>دورة العمل</h3><div class="notice">تسجيل المرشح ← التكوين ← تسجيل الساعات ← الدفع ← تحديد الامتحان ← إدخال النتيجة.</div></div>
+</section>
+
+<section id="candidates">
+<div class="card">
+<h2>إضافة مرشح</h2>
+<div class="row">
+<label>الاسم واللقب<input id="cName"></label>
+<label>رقم بطاقة التعريف<input id="cCin"></label>
+<label>الهاتف<input id="cPhone"></label>
+<label>الصنف<select id="cCat"><option>B</option><option>A</option><option>C</option><option>D</option><option>EB</option><option>EC</option><option>ED</option></select></label>
+</div>
+<button onclick="addCandidate()">حفظ المرشح</button>
+</div>
+<div class="card" style="margin-top:14px"><h2>قائمة المرشحين</h2><input id="search" placeholder="بحث بالاسم أو بطاقة التعريف أو الهاتف" oninput="render()"><div id="candidateTable"></div></div>
+</section>
+
+<section id="training">
+<div class="card"><h2>تسجيل حصة تكوين</h2>
+<div class="row">
+<label>المرشح<select id="tCandidate"></select></label>
+<label>التاريخ<input id="tDate" type="date"></label>
+<label>الساعات<input id="tHours" type="number" min="0.5" step="0.5" value="1"></label>
+<label>النوع<select id="tType"><option>نظري</option><option>تطبيقي</option></select></label>
+</div><button onclick="addTraining()">إضافة الحصة</button></div>
+<div class="card" style="margin-top:14px"><h2>السجل</h2><div id="trainingTable"></div></div>
+</section>
+
+<section id="payments">
+<div class="card"><h2>تسجيل دفعة</h2>
+<div class="row"><label>المرشح<select id="pCandidate"></select></label><label>المبلغ (د.ت)<input id="pAmount" type="number" min="0" step="0.001"></label><label>الطريقة<select id="pMethod"><option>نقدا</option><option>تحويل</option><option>بريد</option><option>أخرى</option></select></label></div>
+<button onclick="addPayment()">حفظ الدفعة</button></div>
+<div class="card" style="margin-top:14px"><h2>الدفوعات</h2><div id="paymentTable"></div></div>
+</section>
+
+<section id="exams">
+<div class="card"><h2>إضافة امتحان</h2>
+<div class="row"><label>المرشح<select id="eCandidate"></select></label><label>نوع الامتحان<select id="eType"><option>نظري</option><option>تطبيقي</option><option>مناورة</option></select></label><label>التاريخ<input id="eDate" type="date"></label><label>النتيجة<select id="eResult"><option>في الانتظار</option><option>ناجح</option><option>راسب</option></select></label></div>
+<button onclick="addExam()">حفظ الامتحان</button></div>
+<div class="card" style="margin-top:14px"><h2>الامتحانات</h2><div id="examTable"></div></div>
+</section>
+
+<section id="settings">
+<div class="card"><h2>الإعدادات</h2>
+<label>اسم المؤسسة<input id="schoolName"></label>
+<label>رمز المسؤول الجديد<input id="newCode" type="password"></label>
+<button onclick="saveSettings()">حفظ الإعدادات</button>
+<hr>
+<button class="danger" onclick="clearData()">مسح كل بيانات المنصة</button>
+</div>
+</section>
+</div></div>
+
+<script>
+const KEY='ae_manager_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{code:'1234',school:'مدرسة تعليم السياقة',candidates:[],training:[],payments:[],exams:[]};
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function login(){if(document.getElementById('loginCode').value===db.code){document.getElementById('loginView').classList.add('hidden');document.getElementById('app').classList.remove('hidden');render()}else alert('رمز الدخول غير صحيح')}
+function logout(){document.getElementById('app').classList.add('hidden');document.getElementById('loginView').classList.remove('hidden')}
+function show(id){document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');render()}
+function addCandidate(){const nameEl=document.getElementById('cName');const cinEl=document.getElementById('cCin');const phoneEl=document.getElementById('cPhone');const catEl=document.getElementById('cCat');const n=(nameEl.value||'').trim();if(!n)return alert('أدخل الاسم واللقب');db.candidates.push({id:Date.now(),name:n,cin:(cinEl.value||'').trim(),phone:(phoneEl.value||'').trim(),cat:catEl.value,date:new Date().toISOString().slice(0,10)});nameEl.value='';cinEl.value='';phoneEl.value='';save();alert('تم حفظ المترشح بنجاح')}
+function opts(id){document.getElementById(id).innerHTML='<option value="">اختر المرشح</option>'+db.candidates.map(c=>`<option value="${c.id}">${esc(c.name)} — ${c.cat}</option>`).join('')}
+function addTraining(){if(!tCandidate.value||!tHours.value)return alert('أكمل البيانات');db.training.push({id:Date.now(),cid:+tCandidate.value,date:tDate.value||new Date().toISOString().slice(0,10),hours:+tHours.value,type:tType.value});save()}
+function addPayment(){if(!pCandidate.value||!pAmount.value)return alert('أكمل البيانات');db.payments.push({id:Date.now(),cid:+pCandidate.value,amount:+pAmount.value,method:pMethod.value,date:new Date().toISOString().slice(0,10)});save()}
+function addExam(){if(!eCandidate.value||!eDate.value)return alert('أكمل البيانات');db.exams.push({id:Date.now(),cid:+eCandidate.value,type:eType.value,date:eDate.value,result:eResult.value});save()}
+function cand(id){return db.candidates.find(c=>c.id==id)||{name:'—',cat:'—'}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function del(type,id){if(confirm('حذف هذا السجل؟')){db[type]=db[type].filter(x=>x.id!=id);save()}}
+function render(){
+ document.getElementById('sCandidates').textContent=db.candidates.length;
+ document.getElementById('sHours').textContent=db.training.reduce((a,x)=>a+x.hours,0);
+ document.getElementById('sPaid').textContent=db.payments.reduce((a,x)=>a+x.amount,0).toFixed(3)+' د.ت';
+ document.getElementById('sExams').textContent=db.exams.filter(x=>x.result==='في الانتظار').length;
+ ['tCandidate','pCandidate','eCandidate'].forEach(opts);
+ let q=(document.getElementById('search')?.value||'').toLowerCase();
+ let cs=db.candidates.filter(c=>(c.name+' '+c.cin+' '+c.phone).toLowerCase().includes(q));
+ candidateTable.innerHTML='<table><tr><th>الاسم</th><th>الصنف</th><th>الهاتف</th><th>تاريخ التسجيل</th><th></th></tr>'+cs.map(c=>`<tr><td>${esc(c.name)}</td><td><span class="badge">${c.cat}</span></td><td>${esc(c.phone)}</td><td>${c.date}</td><td class="actions"><button class="danger" onclick="del('candidates',${c.id})">حذف</button></td></tr>`).join('')+'</table>';
+ trainingTable.innerHTML='<table><tr><th>المرشح</th><th>التاريخ</th><th>النوع</th><th>الساعات</th><th></th></tr>'+db.training.map(x=>`<tr><td>${esc(cand(x.cid).name)}</td><td>${x.date}</td><td>${x.type}</td><td>${x.hours}</td><td><button class="danger" onclick="del('training',${x.id})">حذف</button></td></tr>`).join('')+'</table>';
+ paymentTable.innerHTML='<table><tr><th>المرشح</th><th>التاريخ</th><th>الطريقة</th><th>المبلغ</th><th></th></tr>'+db.payments.map(x=>`<tr><td>${esc(cand(x.cid).name)}</td><td>${x.date}</td><td>${x.method}</td><td>${x.amount.toFixed(3)} د.ت</td><td><button class="danger" onclick="del('payments',${x.id})">حذف</button></td></tr>`).join('')+'</table>';
+ examTable.innerHTML='<table><tr><th>المرشح</th><th>النوع</th><th>التاريخ</th><th>النتيجة</th><th></th></tr>'+db.exams.map(x=>`<tr><td>${esc(cand(x.cid).name)}</td><td>${x.type}</td><td>${x.date}</td><td><span class="badge">${x.result}</span></td><td><button class="danger" onclick="del('exams',${x.id})">حذف</button></td></tr>`).join('')+'</table>';
+ schoolName.value=db.school;
+}
+function saveSettings(){db.school=schoolName.value||db.school;if(newCode.value.trim())db.code=newCode.value.trim();save();alert('تم حفظ الإعدادات')}
+function clearData(){if(confirm('سيتم حذف جميع المرشحين والتكوينات والدفوعات والامتحانات. هل أنت متأكد؟')){db.candidates=[];db.training=[];db.payments=[];db.exams=[];save()}}
+tDate.value=new Date().toISOString().slice(0,10);eDate.value=new Date().toISOString().slice(0,10);render();
+</script>
+</body></html>
