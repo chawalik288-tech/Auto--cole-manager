@@ -647,9 +647,7 @@ function renderCandidatePortal(c){
  <td>${statusBadge(x.result)}</td>
  </tr>`).join('')}
  </table>
- </div>`:'<div class="empty">لا توجد امتحانات مسجلة</div>'}
- `;
-}
+ </div>`:'<div class="empty">لا توجد امتحان
 
 /* ---------- NAVIGATION ---------- */
 
@@ -657,8 +655,17 @@ function showSection(id){
  document.querySelectorAll('#professionalApp section')
  .forEach(x=>x.classList.remove('active'));
 
- document.getElementById(id).classList.add('active');
+ const section=document.getElementById(id);
+
+ if(!section)return;
+
+ section.classList.add('active');
+
  renderAll();
+
+ if(id==='trainerSpace'){
+   renderTrainerSpace();
+ }
 }
 
 /* ---------- CANDIDATES ---------- */
