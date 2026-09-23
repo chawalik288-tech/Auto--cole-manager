@@ -651,22 +651,14 @@ function renderCandidatePortal(c){
 
 /* ---------- NAVIGATION ---------- */
 
+
 function showSection(id){
  document.querySelectorAll('#professionalApp section')
  .forEach(x=>x.classList.remove('active'));
 
- const section=document.getElementById(id);
-
- if(!section)return;
-
- section.classList.add('active');
-
+ document.getElementById(id).classList.add('active');
  renderAll();
-
- if(id==='trainerSpace'){
-   renderTrainerSpace();
- }
-
+}
 
 /* ---------- CANDIDATES ---------- */
 
