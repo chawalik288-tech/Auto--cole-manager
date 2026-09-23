@@ -256,53 +256,30 @@ th,td{font-size:12px}
 </div>
 </section>
 
-<!-- TRAINING -->
-<section id="training">
+<!-- TRAINER SPACE -->
+<section id="trainerSpace">
 <div class="card">
-<h2>تسجيل حصة تكوين</h2>
+<h2>👨‍🏫 فضاء المدرب</h2>
+
 <div class="row">
-<label>المترشح<select id="tCandidate"></select></label>
-<label>المدرب<select id="tTrainer"></select></label>
-<label>العربة<select id="tVehicle"></select></label>
-<label>التاريخ<input id="tDate" type="date"></label>
-<label>الساعة<input id="tTime" type="time"></label>
-<label>الساعات<input id="tHours" type="number" min="0.5" step="0.5" value="1"></label>
-<label>النوع
-<select id="tType">
-<option>نظري</option>
-<option>تطبيقي</option>
-</select>
-</label>
-<label>الحالة
-<select id="tStatus">
-<option>مجدولة</option>
-<option>منجزة</option>
-<option>ملغاة</option>
+<label>اختر المدرب
+<select id="trainerSpaceSelect" onchange="renderTrainerSpace()">
+<option value="">-- اختر المدرب --</option>
 </select>
 </label>
 </div>
-<button onclick="addTraining()">حفظ الحصة</button>
 </div>
 
 <div class="card">
-<h2>سجل التكوين</h2>
-<div class="row">
-<label>تصفية الحالة
-<select id="trainingFilter" onchange="renderTraining()">
-<option value="">الكل</option>
-<option>مجدولة</option>
-<option>منجزة</option>
-<option>ملغاة</option>
-</select>
-</label>
-<label>تصفية التاريخ
-<input id="trainingDateFilter" type="date" onchange="renderTraining">
-</label>
+<h2>الحصص الخاصة بالمدرب</h2>
+<div id="trainerSpaceTable"></div>
 </div>
-<div id="trainingTable"></div>
+
+<div class="card">
+<h2>إحصائيات المدرب</h2>
+<div id="trainerSpaceStats"></div>
 </div>
 </section>
-
 <!-- PAYMENTS -->
 <section id="payments">
 <div class="card">
