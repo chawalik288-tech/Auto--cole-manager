@@ -1290,7 +1290,6 @@ function renderDashboard(){
 }
 
 /* ---------- RENDER ALL ---------- */
-
 function renderAll(){
  renderDashboard();
  renderCandidates();
@@ -1302,10 +1301,11 @@ function renderAll(){
  renderReports();
  renderSettings();
  fillAllSelects();
+ renderTrainerSpace();
 
  document.getElementById('headerSchool').textContent=
  db.school.name||'Auto École Manager';
-}
+  }
 
 /* ---------- INITIAL ---------- */
 
