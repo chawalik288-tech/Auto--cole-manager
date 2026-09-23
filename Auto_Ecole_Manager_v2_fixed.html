@@ -1315,15 +1315,20 @@ function renderTrainerSpace(){
 
  const current=select.value;
 
- select.innerHTML=
-   '<option value="">-- اختر المدرب --</option>'+
-   db.trainers.map(t=>
-     `<option value="${t.id}">${esc(t.name)}</option>`
-   ).join('');
+if(!db.trainers.length){
+   select.innerHTML='<option value="">-- لا يوجد مدربون --</option>';
+   table.innerHTML='<div class="empty">لا توجد مدربين</div>';
+   stats.innerHTML='<div class="empty">لا توجد بيانات</div>';
+   return;
+}
 
- if(current && db.trainers.some(t=>String(t.id)===String(current))){
-   select.value=current;
- }
+if(!current){
+   select.innerHTML=
+     '<option value="">-- اختر المدرب --</option>'+
+     db.trainers.map(t=>
+       `<option value="${t.id}">${esc(t.name)}</option>`
+     ).join('');
+}
 
  if(!select.value){
    table.innerHTML='<div class="empty">اختر المدرب لعرض حصصه</div>';
