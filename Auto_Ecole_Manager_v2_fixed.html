@@ -1306,7 +1306,94 @@ function renderAll(){
  document.getElementById('headerSchool').textContent=
  db.school.name||'Auto École Manager';
   }
+function renderTrainerSpace(){
+ const select=document.getElementById('trainerSpaceSelect');
+ const table=document.getElementById('trainerSpaceTable');
+ const stats=document.getElementById('trainerSpaceStats');
 
+ if(!select||!table||!stats) return;
+
+ const current=select.value;
+
+ select.innerHTML=
+   '<option value="">-- اختر المدرب --</option>'+
+   db.trainers.map(t=>
+     `<option value="${t.id}">${esc(t.name)}</option>`
+   ).join('');
+
+ if(current && db.trainers.some(t=>String(t.id)===String(current))){
+   select.value=current;
+ }
+
+ if(!select.value){
+   table.innerHTML='<div class="empty">اختر المدرب لعرض حصصه</div>';
+   stats.innerHTML='<div class="empty">لا توجد إحصائيات لعرضها</div>';
+   return;
+ }
+
+ const tid=Number(select.value);
+
+ const list=db.training.filter(x=>Number(x.tid)===tid);
+
+ if(!list.length){
+   table.innerHTML='<div class="empty">لا توجد حصص لهذا المدرب</div>';
+   stats.innerHTML='<div class="empty">لا توجد بيانات</div>';
+   return;
+ }
+
+ const scheduled=list
+   .filter(x=>x.status==='مجدولة')
+   .reduce((s,x)=>s+Number(x.hours||0),0);
+
+ const completed=list
+   .filter(x=>x.status==='منجزة')
+   .reduce((s,x)=>s+Number(x.hours||0),0);
+
+ const cancelled=list
+   .filter(x=>x.status==='ملغاة')
+   .reduce((s,x)=>s+Number(x.hours||0),0);
+
+ stats.innerHTML=`
+ <div class="row">
+   <div class="card">
+     <h3>الحصص المجدولة</h3>
+     <strong>${scheduled} ساعة</strong>
+   </div>
+   <div class="card">
+     <h3>الساعات المنجزة</h3>
+     <strong>${completed} ساعة</strong>
+   </div>
+   <div class="card">
+     <h3>الساعات الملغاة</h3>
+     <strong>${cancelled} ساعة</strong>
+   </div>
+ </div>`;
+
+ table.innerHTML=`
+ <div class="table-wrap">
+ <table>
+ <tr>
+   <th>المترشح</th>
+   <th>التاريخ</th>
+   <th>الساعة</th>
+   <th>النوع</th>
+   <th>العربة</th>
+   <th>الساعات</th>
+   <th>الحالة</th>
+ </tr>
+ ${list.map(x=>`
+ <tr>
+   <td>${esc(candidate(x.cid).name)}</td>
+   <td>${esc(x.date)}</td>
+   <td>${esc(x.time||'')}</td>
+   <td>${esc(x.type)}</td>
+   <td>${esc(vehicle(x.vid).reg)}</td>
+   <td>${x.hours}</td>
+   <td>${statusBadge(x.status)}</td>
+ </tr>`).join('')}
+ </table>
+ </div>`;
+  }
 /* ---------- INITIAL ---------- */
 
 document.addEventListener('DOMContentLoaded',function(){
