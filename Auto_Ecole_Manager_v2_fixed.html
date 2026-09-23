@@ -563,7 +563,23 @@ function professionalLogin(){
 
  document.getElementById('professionalLogin').classList.add('hidden');
  document.getElementById('professionalApp').classList.remove('hidden');
- renderAll();
+ renderAll();function delRecord(type,id){
+    if(!confirm('هل تريد حذف هذا السجل؟')) return;
+
+    if(!db[type]){
+        alert('نوع السجل غير موجود');
+        return;
+    }
+
+    db[type] = db[type].filter(x => String(x.id) !== String(id));
+
+    save();
+
+    if(typeof render === 'function') render();
+    if(typeof renderAll === 'function') renderAll();
+
+    alert('تم حذف السجل بنجاح');
+}
 }
 
 function logoutProfessional(){
@@ -1234,13 +1250,24 @@ function importData(){
 }
 
 /* ---------- DELETE ---------- */
-
 function delRecord(type,id){
- if(!confirm('هل تريد حذف هذا السجل؟'))return;
+    if(!confirm('هل تريد حذف هذا السجل؟')) return;
 
- db[type]=db[type].filter(x=>x.id!=id);
- save();
-}
+    if(!db[type]){
+        alert('نوع السجل غير موجود');
+        return;
+    }
+
+    db[type] = db[type].filter(x => String(x.id) !== String(id));
+
+    save();
+
+    if(typeof render === 'function') render();
+    if(typeof renderAll === 'function') renderAll();
+
+    alert('تم حذف السجل بنجاح');
+  }
+
 
 function clearData(){
  if(!confirm('سيتم حذف جميع بيانات المترشحين والمدربين والعربات والتكوين والدفوعات والامتحانات. هل أنت متأكد؟'))
