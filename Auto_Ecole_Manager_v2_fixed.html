@@ -848,7 +848,7 @@ function fillAllSelects(){
  fillSelect('eCandidate',db.candidates,'اختر المترشح',c=>`${c.name} — ${c.cat}`);
 
  fillSelect('tTrainer',db.trainers,'اختر المدرب',t=>t.name);
-
+fillSelect('trainerSpaceSelect',db.trainers,'اختر المدرب',t=>t.name);
  const available=db.vehicles.filter(v=>v.status==='متاحة');
 
  fillSelect(
