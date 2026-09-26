@@ -52,6 +52,7 @@ th{background:#f8fafc}
 hr{border:0;border-top:1px solid #edf0f5;margin:18px 0}
 .empty{padding:25px;text-align:center;color:#64748b}
 .report-box{border-right:4px solid #2563eb;padding:12px;background:#f8fafc;border-radius:10px;margin:8px 0}
+.password-section{background:#f8fafc;border-radius:10px;padding:15px;margin-top:10px;border-right:4px solid #059669}
 @media(max-width:600px){
 header{position:relative}
 .container{padding:10px}
@@ -174,7 +175,7 @@ th,td{font-size:12px}
 <div class="card"><div class="muted">المدربون</div><div class="stat" id="kTrainers">0</div></div>
 <div class="card"><div class="muted">العربات</div><div class="stat" id="kVehicles">0</div></div>
 <div class="card"><div class="muted">الساعات المنجزة</div><div class="stat" id="kHours">0</div></div>
-<div class="card"><div class="muted">الساعات المجدولة</div><div class="stat" id="kScheduled">0</div></div>
+<div class="card"><div class="muted">��لساعات المجدولة</div><div class="stat" id="kScheduled">0</div></div>
 <div class="card"><div class="muted">الساعات الملغاة</div><div class="stat" id="kCancelled">0</div></div>
 <div class="card"><div class="muted">المبالغ المدفوعة</div><div class="stat" id="kPaid">0 د.ت</div></div>
 <div class="card"><div class="muted">الامتحانات في الانتظار</div><div class="stat" id="kWaiting">0</div></div>
@@ -183,7 +184,7 @@ th,td{font-size:12px}
 <div class="card">
 <h3>دورة العمل</h3>
 <div class="notice">
-التسجيل → تحديد الصنف → المدرب والعربة → جدولة التكوين → إنجاز الساعات → الدفوعات → الامتحانات → Admis / Ajourné / En cours
+التسجيل → تحديد الصنف → المدرب والعربة → جدولة التكوين → إنجاز الساعات → الدفوعات → الامتحانات → Admis / Ajou[...]
 </div>
 </div>
 </section>
@@ -421,6 +422,25 @@ th,td{font-size:12px}
 
 <hr>
 
+<h3>🔐 تغيير كلمة المرور</h3>
+<div class="password-section">
+<label>كلمة المرور الحالية
+<input id="currentPassword" type="password" placeholder="أدخل كلمة المرور الحالية">
+</label>
+
+<label>كلمة المرور الجديدة
+<input id="newPassword" type="password" placeholder="أدخل كلمة المرور الجديدة">
+</label>
+
+<label>تأكيد كلمة المرور الجديدة
+<input id="confirmPassword" type="password" placeholder="أعد إدخال كلمة المرور الجديدة">
+</label>
+
+<button class="success" onclick="changePassword()">تغيير كلمة المرور</button>
+</div>
+
+<hr>
+
 <h3>النسخ الاحتياطي</h3>
 <button class="secondary" onclick="exportData()">تصدير نسخة احتياطية</button>
 <button class="secondary" onclick="importData()">استرجاع البيانات</button>
@@ -541,23 +561,7 @@ function professionalLogin(){
 
  document.getElementById('professionalLogin').classList.add('hidden');
  document.getElementById('professionalApp').classList.remove('hidden');
- renderAll();function delRecord(type,id){
-    if(!confirm('هل تريد حذف هذا السجل؟')) return;
-
-    if(!db[type]){
-        alert('نوع السجل غير موجود');
-        return;
-    }
-
-    db[type] = db[type].filter(x => String(x.id) !== String(id));
-
-    save();
-
-    if(typeof render === 'function') render();
-    if(typeof renderAll === 'function') renderAll();
-
-    alert('تم حذف السجل بنجاح');
-}
+ renderAll();
 }
 
 function logoutProfessional(){
@@ -912,7 +916,7 @@ function renderTraining(){
  <th>المترشح</th>
  <th>التاريخ</th>
  <th>الساعة</th>
- <th>النوع</th>k
+ <th>النوع</th>
  <th>المدرب</th>
  <th>العربة</th>
  <th>الساعات</th>
@@ -1008,13 +1012,13 @@ function addExam(){
 }
 
 function renderExams(){
- const ft=document.getElementById('examFilterType')?.value||'';
- const fr=document.getElementById('examFilterResult')?.value||'';
+ const typeFilter=document.getElementById('examFilterType')?.value||'';
+ const resultFilter=document.getElementById('examFilterResult')?.value||'';
 
  let list=db.exams;
 
- if(ft)list=list.filter(x=>x.type===ft);
- if(fr)list=list.filter(x=>x.result===fr);
+ if(typeFilter)list=list.filter(x=>x.type===typeFilter);
+ if(resultFilter)list=list.filter(x=>x.result===resultFilter);
 
  if(!list.length){
    document.getElementById('examTable').innerHTML='<div class="empty">لا توجد امتحانات</div>';
@@ -1046,252 +1050,228 @@ function renderExams(){
 
 /* ---------- REPORTS ---------- */
 
-function inPeriod(date,period,reference){
- if(!date)return false;
-
- const d=new Date(date);
- const r=new Date(reference);
-
+function getDateRange(period){
+ const now=new Date(document.getElementById('reportDate')?.value||today());
+ 
  if(period==='day'){
-   return date===reference;
+   return {start:today(),end:today()};
  }
-
  if(period==='month'){
-   return d.getFullYear()===r.getFullYear() &&
-          d.getMonth()===r.getMonth();
+   const start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+   const end=today();
+   return {start,end};
  }
-
  if(period==='year'){
-   return d.getFullYear()===r.getFullYear();
+   const start=new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
+   const end=today();
+   return {start,end};
  }
-
- return true;
+ return {start:'',end:''};
 }
 
 function renderReports(){
- const period=document.getElementById('reportPeriod')?.value||'day';
- const reference=document.getElementById('reportDate')?.value||today();
+ const period=document.getElementById('reportPeriod')?.value||'month';
+ const {start,end}=getDateRange(period);
 
- const training=db.training.filter(x=>inPeriod(x.date,period,reference));
- const exams=db.exams.filter(x=>inPeriod(x.date,period,reference));
+ const trainingInRange=db.training.filter(x=>x.date>=start&&x.date<=end);
+ const scheduled=trainingInRange.filter(x=>x.status==='مجدولة').reduce((a,x)=>a+x.hours,0);
+ const completed=trainingInRange.filter(x=>x.status==='منجزة').reduce((a,x)=>a+x.hours,0);
+ const cancelled=trainingInRange.filter(x=>x.status==='ملغاة').reduce((a,x)=>a+x.hours,0);
 
- const scheduled=training
- .filter(x=>x.status==='مجدولة')
- .reduce((a,x)=>a+x.hours,0);
+ const examsInRange=db.exams.filter(x=>x.date>=start&&x.date<=end);
 
- const completed=training
- .filter(x=>x.status==='منجزة')
- .reduce((a,x)=>a+x.hours,0);
-
- const cancelled=training
- .filter(x=>x.status==='ملغاة')
- .reduce((a,x)=>a+x.hours,0);
-
- document.getElementById('rScheduled').textContent=scheduled;
- document.getElementById('rCompleted').textContent=completed;
- document.getElementById('rCancelled').textContent=cancelled;
- document.getElementById('rExams').textContent=exams.length;
-
- const counts={
-   'نظري':0,
-   'Circulation':0,
-   'Manœuvre':0
- };
-
- const results={
-   'En cours':0,
-   'Admis':0,
-   'Ajourné':0
- };
-
- exams.forEach(x=>{
-   if(counts[x.type]!==undefined)counts[x.type]++;
-   if(results[x.result]!==undefined)results[x.result]++;
- });
-
- const byTrainer={};
- training.forEach(x=>{
-   const name=trainer(x.tid).name;
-   if(!byTrainer[name])byTrainer[name]={
-     scheduled:0,
-     completed:0,
-     cancelled:0
-   };
-
-   if(x.status==='مجدولة')byTrainer[name].scheduled+=x.hours;
-   if(x.status==='منجزة')byTrainer[name].completed+=x.hours;
-   if(x.status==='ملغاة')byTrainer[name].cancelled+=x.hours;
- });
-
- const byVehicle={};
- training.forEach(x=>{
-   const name=vehicle(x.vid).reg;
-   if(!byVehicle[name])byVehicle[name]=0;
-   byVehicle[name]+=x.hours;
- });
+ document.getElementById('rScheduled').innerHTML=scheduled;
+ document.getElementById('rCompleted').innerHTML=completed;
+ document.getElementById('rCancelled').innerHTML=cancelled;
+ document.getElementById('rExams').innerHTML=examsInRange.length;
 
  document.getElementById('reportDetails').innerHTML=`
- <div class="grid">
-
- <div class="card">
- <h3>الامتحانات حسب النوع</h3>
- <div class="report-box">نظري: <b>${counts['نظري']}</b></div>
- <div class="report-box">Circulation: <b>${counts['Circulation']}</b></div>
- <div class="report-box">Manœuvre: <b>${counts['Manœuvre']}</b></div>
- </div>
-
- <div class="card">
- <h3>نتائج الامتحانات</h3>
- <div class="report-box">En cours: <b>${results['En cours']}</b></div>
- <div class="report-box">Admis: <b>${results['Admis']}</b></div>
- <div class="report-box">Ajourné: <b>${results['Ajourné']}</b></div>
- </div>
-
- </div>
-
- <div class="card">
- <h3>الساعات حسب المدرب</h3>
- ${
- Object.keys(byTrainer).length?
- `<div class="table-wrap">
- <table>
- <tr><th>المدرب</th><th>مجدولة</th><th>منجزة</th><th>ملغاة</th></tr>
- ${Object.entries(byTrainer).map(([name,v])=>`
- <tr>
- <td>${esc(name)}</td>
- <td>${v.scheduled}</td>
- <td>${v.completed}</td>
- <td>${v.cancelled}</td>
- </tr>`).join('')}
- </table>
- </div>`:
- '<div class="empty">لا توجد بيانات</div>'
- }
- </div>
-
- <div class="card">
- <h3>الساعات حسب العربة</h3>
- ${
- Object.keys(byVehicle).length?
- `<div class="table-wrap">
- <table>
- <tr><th>العربة</th><th>إجمالي الساعات</th></tr>
- ${Object.entries(byVehicle).map(([name,h])=>`
- <tr><td>${esc(name)}</td><td>${h}</td></tr>`).join('')}
- </table>
- </div>`:
- '<div class="empty">لا توجد بيانات</div>'
- }
+ <div class="report-box">
+ <b>فترة التقرير:</b> من ${start} إلى ${end}<br>
+ <b>ملخص:</b> تم جدولة ${scheduled} ساعة، و أنجز ${completed} ساعة، و ألغيت ${cancelled} ساعة.
  </div>
  `;
+}
+
+/* ---------- TRAINER SPACE ---------- */
+
+function renderTrainerSpace(){
+ const tid=document.getElementById('trainerSpaceSelect')?.value;
+
+ if(!tid){
+   document.getElementById('trainerSpaceTable').innerHTML='<div class="empty">الرجاء اختيار مدرب</div>';
+   document.getElementById('trainerSpaceStats').innerHTML='';
+   return;
+ }
+
+ const training=db.training.filter(x=>x.tid==tid);
+ const t=trainer(tid);
+
+ if(!training.length){
+   document.getElementById('trainerSpaceTable').innerHTML='<div class="empty">لا توجد حصص لهذا المدرب</div>';
+ }else{
+   document.getElementById('trainerSpaceTable').innerHTML=`
+   <div class="table-wrap">
+   <table>
+   <tr>
+   <th>المترشح</th>
+   <th>التاريخ</th>
+   <th>النوع</th>
+   <th>الساعات</th>
+   <th>الحالة</th>
+   </tr>
+   ${training.map(x=>`
+   <tr>
+   <td>${esc(candidate(x.cid).name)}</td>
+   <td>${esc(x.date)}</td>
+   <td>${esc(x.type)}</td>
+   <td>${x.hours}</td>
+   <td>${statusBadge(x.status)}</td>
+   </tr>`).join('')}
+   </table>
+   </div>`;
+ }
+
+ const totalHours=training.reduce((a,x)=>a+x.hours,0);
+ const completedHours=training.filter(x=>x.status==='منجزة').reduce((a,x)=>a+x.hours,0);
+ const sessions=training.length;
+
+ document.getElementById('trainerSpaceStats').innerHTML=`
+ <div class="grid">
+ <div class="card"><div class="muted">إجمالي الساعات</div><div class="stat">${totalHours}</div></div>
+ <div class="card"><div class="muted">الساعات المنجزة</div><div class="stat">${completedHours}</div></div>
+ <div class="card"><div class="muted">عدد الحصص</div><div class="stat">${sessions}</div></div>
+ </div>`;
 }
 
 /* ---------- SETTINGS ---------- */
 
 function saveSettings(){
- db.school.name=document.getElementById('schoolName').value.trim()||db.school.name;
+ db.school.name=document.getElementById('schoolName').value.trim();
  db.school.address=document.getElementById('schoolAddress').value.trim();
  db.school.phone=document.getElementById('schoolPhone').value.trim();
-
+ 
  const newCode=document.getElementById('newProfessionalCode').value.trim();
-
- if(newCode)db.professionalCode=newCode;
+ if(newCode){
+   db.professionalCode=newCode;
+   document.getElementById('newProfessionalCode').value='';
+ }
 
  save();
- alert('تم حفظ الإعدادات');
+ alert('تم حفظ الإعدادات بنجاح');
 }
 
-function renderSettings(){
- document.getElementById('schoolName').value=db.school.name||'';
- document.getElementById('schoolAddress').value=db.school.address||'';
- document.getElementById('schoolPhone').value=db.school.phone||'';
- document.getElementById('headerSchool').textContent=db.school.name||'Auto École Manager';
-}
+function changePassword(){
+ const currentPwd=document.getElementById('currentPassword').value;
+ const newPwd=document.getElementById('newPassword').value;
+ const confirmPwd=document.getElementById('confirmPassword').value;
 
-/* ---------- BACKUP ---------- */
+ if(!currentPwd||!newPwd||!confirmPwd){
+   alert('أكمل جميع الحقول');
+   return;
+ }
+
+ if(currentPwd!==db.professionalCode){
+   alert('كلمة المرور الحالية غير صحيحة');
+   return;
+ }
+
+ if(newPwd.length<4){
+   alert('كلمة المرور الجديدة يجب أن تكون 4 أحرف على الأقل');
+   return;
+ }
+
+ if(newPwd!==confirmPwd){
+   alert('كلمة المرور الجديدة وتأكيدها غير متطابقة');
+   return;
+ }
+
+ db.professionalCode=newPwd;
+ 
+ document.getElementById('currentPassword').value='';
+ document.getElementById('newPassword').value='';
+ document.getElementById('confirmPassword').value='';
+
+ save();
+ alert('تم تغيير كلمة المرور بنجاح. الرجاء تسجيل الدخول من جديد');
+ logoutProfessional();
+}
 
 function exportData(){
- const data=JSON.stringify(db,null,2);
- const blob=new Blob([data],{type:'application/json'});
- const url=URL.createObjectURL(blob);
-
- const a=document.createElement('a');
- a.href=url;
- a.download='auto_ecole_backup_'+today()+'.json';
- a.click();
-
+ const dataStr=JSON.stringify(db,null,2);
+ const dataBlob=new Blob([dataStr],{type:'application/json'});
+ const url=URL.createObjectURL(dataBlob);
+ const link=document.createElement('a');
+ link.href=url;
+ link.download='AEManager_backup_'+today()+'.json';
+ link.click();
  URL.revokeObjectURL(url);
 }
 
 function importData(){
- alert('للاسترجاع من الهاتف يمكن لاحقًا إضافة مستورد ملفات مباشر. النسخة الحالية تتيح التصدير الآمن للبيانات.');
+ const input=document.createElement('input');
+ input.type='file';
+ input.accept='.json';
+ input.onchange=function(e){
+   const file=e.target.files[0];
+   if(!file)return;
+   
+   const reader=new FileReader();
+   reader.onload=function(evt){
+     try{
+       const imported=JSON.parse(evt.target.result);
+       db=imported;
+       save();
+       alert('تم استرجاع البيانات بنجاح');
+     }catch(err){
+       alert('خطأ في قراءة الملف');
+     }
+   };
+   reader.readAsText(file);
+ };
+ input.click();
 }
-
-/* ---------- DELETE ---------- */
-function delRecord(type,id){
-    if(!confirm('هل تريد حذف هذا السجل؟')) return;
-
-    if(!db[type]){
-        alert('نوع السجل غير موجود');
-        return;
-    }
-
-    db[type] = db[type].filter(x => String(x.id) !== String(id));
-
-    save();
-
-    if(typeof render === 'function') render();
-    if(typeof renderAll === 'function') renderAll();
-
-    alert('تم حذف السجل بنجاح');
-  }
-
 
 function clearData(){
- if(!confirm('سيتم حذف جميع بيانات المترشحين والمدربين والعربات والتكوين والدفوعات والامتحانات. هل أنت متأكد؟'))
- return;
-
- db.candidates=[];
- db.trainers=[];
- db.vehicles=[];
- db.training=[];
- db.payments=[];
- db.exams=[];
-
+ if(!confirm('هل تريد حقا مسح جميع البيانات؟ هذا الإجراء لا يمكن عكسه!'))return;
+ 
+ db={
+   professionalCode:'1234',
+   school:{
+     name:'مدرسة تعليم السياقة',
+     address:'',
+     phone:''
+   },
+   candidates:[],
+   trainers:[],
+   vehicles:[],
+   training:[],
+   payments:[],
+   exams:[]
+ };
+ 
  save();
-
- alert('تم مسح البيانات');
+ alert('تم مسح جميع البيانات');
 }
 
-/* ---------- DASHBOARD ---------- */
+function delRecord(type,id){
+ if(!confirm('هل تريد حذف هذا السجل؟'))return;
 
-function renderDashboard(){
- document.getElementById('kCandidates').textContent=db.candidates.length;
- document.getElementById('kTrainers').textContent=db.trainers.length;
- document.getElementById('kVehicles').textContent=db.vehicles.length;
+ if(!db[type]){
+   alert('نوع السجل غير موجود');
+   return;
+ }
 
- document.getElementById('kHours').textContent=
- db.training.filter(x=>x.status==='منجزة')
- .reduce((a,x)=>a+x.hours,0);
+ db[type]=db[type].filter(x=>String(x.id)!==String(id));
 
- document.getElementById('kScheduled').textContent=
- db.training.filter(x=>x.status==='مجدولة')
- .reduce((a,x)=>a+x.hours,0);
-
- document.getElementById('kCancelled').textContent=
- db.training.filter(x=>x.status==='ملغاة')
- .reduce((a,x)=>a+x.hours,0);
-
- document.getElementById('kPaid').textContent=
- db.payments.reduce((a,x)=>a+x.amount,0).toFixed(3)+' د.ت';
-
- document.getElementById('kWaiting').textContent=
- db.exams.filter(x=>x.result==='En cours').length;
+ save();
+ alert('تم حذف السجل بنجاح');
 }
 
 /* ---------- RENDER ALL ---------- */
+
 function renderAll(){
- renderDashboard();
+ fillAllSelects();
  renderCandidates();
  renderTrainers();
  renderVehicles();
@@ -1299,114 +1279,44 @@ function renderAll(){
  renderPayments();
  renderExams();
  renderReports();
- renderSettings();
- fillAllSelects();
  renderTrainerSpace();
 
- document.getElementById('headerSchool').textContent=
- db.school.name||'Auto École Manager';
-  }
-function renderTrainerSpace(){
- const select=document.getElementById('trainerSpaceSelect');
- const table=document.getElementById('trainerSpaceTable');
- const stats=document.getElementById('trainerSpaceStats');
+ // Update settings fields
+ document.getElementById('schoolName').value=db.school.name;
+ document.getElementById('schoolAddress').value=db.school.address;
+ document.getElementById('schoolPhone').value=db.school.phone;
 
- if(!select||!table||!stats) return;
+ // KPI Cards
+ document.getElementById('kCandidates').innerHTML=db.candidates.length;
+ document.getElementById('kTrainers').innerHTML=db.trainers.length;
+ document.getElementById('kVehicles').innerHTML=db.vehicles.length;
 
- const current=select.value;
+ const hoursDone=db.training
+ .filter(x=>x.status==='منجزة')
+ .reduce((a,x)=>a+x.hours,0);
 
- select.innerHTML=
-   '<option value="">-- اختر المدرب --</option>'+
-   db.trainers.map(t=>
-     `<option value="${t.id}">${esc(t.name)}</option>`
-   ).join('');
+ const scheduled=db.training
+ .filter(x=>x.status==='مجدولة')
+ .reduce((a,x)=>a+x.hours,0);
 
- if(current && db.trainers.some(t=>String(t.id)===String(current))){
-   select.value=current;
- }
+ const cancelled=db.training
+ .filter(x=>x.status==='ملغاة')
+ .reduce((a,x)=>a+x.hours,0);
 
- if(!select.value){
-   table.innerHTML='<div class="empty">اختر المدرب لعرض حصصه</div>';
-   stats.innerHTML='<div class="empty">لا توجد إحصائيات لعرضها</div>';
-   return;
- }
+ const paid=db.payments.reduce((a,x)=>a+x.amount,0);
 
- const tid=Number(select.value);
+ document.getElementById('kHours').innerHTML=hoursDone;
+ document.getElementById('kScheduled').innerHTML=scheduled;
+ document.getElementById('kCancelled').innerHTML=cancelled;
+ document.getElementById('kPaid').innerHTML=paid.toFixed(3)+' د.ت';
+ document.getElementById('kWaiting').innerHTML=db.exams.filter(x=>x.result==='En cours').length;
 
- const list=db.training.filter(x=>Number(x.tid)===tid);
+ document.getElementById('headerSchool').innerHTML=db.school.name;
+}
 
- if(!list.length){
-   table.innerHTML='<div class="empty">لا توجد حصص لهذا المدرب</div>';
-   stats.innerHTML='<div class="empty">لا توجد بيانات</div>';
-   return;
- }
-
- const scheduled=list
-   .filter(x=>x.status==='مجدولة')
-   .reduce((s,x)=>s+Number(x.hours||0),0);
-
- const completed=list
-   .filter(x=>x.status==='منجزة')
-   .reduce((s,x)=>s+Number(x.hours||0),0);
-
- const cancelled=list
-   .filter(x=>x.status==='ملغاة')
-   .reduce((s,x)=>s+Number(x.hours||0),0);
-
- stats.innerHTML=`
- <div class="row">
-   <div class="card">
-     <h3>الحصص المجدولة</h3>
-     <strong>${scheduled} ساعة</strong>
-   </div>
-   <div class="card">
-     <h3>الساعات المنجزة</h3>
-     <strong>${completed} ساعة</strong>
-   </div>
-   <div class="card">
-     <h3>الساعات الملغاة</h3>
-     <strong>${cancelled} ساعة</strong>
-   </div>
- </div>`;
-
- table.innerHTML=`
- <div class="table-wrap">
- <table>
- <tr>
-   <th>المترشح</th>
-   <th>التاريخ</th>
-   <th>الساعة</th>
-   <th>النوع</th>
-   <th>العربة</th>
-   <th>الساعات</th>
-   <th>الحالة</th>
- </tr>
- ${list.map(x=>`
- <tr>
-   <td>${esc(candidate(x.cid).name)}</td>
-   <td>${esc(x.date)}</td>
-   <td>${esc(x.time||'')}</td>
-   <td>${esc(x.type)}</td>
-   <td>${esc(vehicle(x.vid).reg)}</td>
-   <td>${x.hours}</td>
-   <td>${statusBadge(x.status)}</td>
- </tr>`).join('')}
- </table>
- </div>`;
-  }
-/* ---------- INITIAL ---------- */
-
-document.addEventListener('DOMContentLoaded',function(){
-
- document.getElementById('tDate').value=today();
- document.getElementById('eDate').value=today();
- document.getElementById('pDate').value=today();
- document.getElementById('reportDate').value=today();
-
- renderAll();
-
-});
+// Initialize on load
+renderAll();
 </script>
 
 </body>
-  </html>
+</html>
