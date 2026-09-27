@@ -571,6 +571,14 @@ let db={
 
 function save(){
  localStorage.setItem(KEY,JSON.stringify(db));
+
+ // إعادة تحميل البيانات المحفوظة للتأكد من تحديث db
+ const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+
+ if(saved){
+   db=saved;
+ }
+
  renderAll();
 }
 
