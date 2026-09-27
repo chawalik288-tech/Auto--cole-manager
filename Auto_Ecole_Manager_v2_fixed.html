@@ -570,15 +570,9 @@ let db={
 };
 
 function save(){
- localStorage.setItem(KEY,JSON.stringify(db));
-
- // إعادة تحميل البيانات المحفوظة للتأكد من تحديث db
- const saved=JSON.parse(localStorage.getItem(KEY)||'null');
-
- if(saved){
-   db=saved;
- }
-
+  localStorage.setItem(KEY, JSON.stringify(db));
+  renderAll();
+  }
  renderAll();
 }
 
@@ -1374,50 +1368,130 @@ function delRecord(type,id){
 }
 
 /* ---------- RENDER ALL ---------- */
-
 function renderAll(){
- fillAllSelects();
- renderCandidates();
- renderTrainers();
- renderVehicles();
- renderTraining();
- renderPayments();
- renderExams();
- renderReports();
- renderTrainerSpace();
 
- // Update settings fields
- document.getElementById('schoolName').value=db.school.name;
- document.getElementById('schoolAddress').value=db.school.address;
- document.getElementById('schoolPhone').value=db.school.phone;
+  // تحديث القوائم
+  try {
+    fillAllSelects();
+  } catch(e) {
+    console.error('fillAllSelects:', e);
+  }
 
- // KPI Cards
- document.getElementById('kCandidates').innerHTML=db.candidates.length;
- document.getElementById('kTrainers').innerHTML=db.trainers.length;
- document.getElementById('kVehicles').innerHTML=db.vehicles.length;
+  // تحديث المترشحين
+  try {
+    renderCandidates();
+  } catch(e) {
+    console.error('renderCandidates:', e);
+  }
 
- const hoursDone=db.training
- .filter(x=>x.status==='منجزة')
- .reduce((a,x)=>a+x.hours,0);
+  // تحديث المدربين
+  try {
+    renderTrainers();
+  } catch(e) {
+    console.error('renderTrainers:', e);
+  }
 
- const scheduled=db.training
- .filter(x=>x.status==='مجدولة')
- .reduce((a,x)=>a+x.hours,0);
+  // تحديث العربات
+  try {
+    renderVehicles();
+  } catch(e) {
+    console.error('renderVehicles:', e);
+  }
 
- const cancelled=db.training
- .filter(x=>x.status==='ملغاة')
- .reduce((a,x)=>a+x.hours,0);
+  // تحديث التكوين
+  try {
+    renderTraining();
+  } catch(e) {
+    console.error('renderTraining:', e);
+  }
 
- const paid=db.payments.reduce((a,x)=>a+x.amount,0);
+  // تحديث الدفوعات
+  try {
+    renderPayments();
+  } catch(e) {
+    console.error('renderPayments:', e);
+  }
 
- document.getElementById('kHours').innerHTML=hoursDone;
- document.getElementById('kScheduled').innerHTML=scheduled;
- document.getElementById('kCancelled').innerHTML=cancelled;
- document.getElementById('kPaid').innerHTML=paid.toFixed(3)+' د.ت';
- document.getElementById('kWaiting').innerHTML=db.exams.filter(x=>x.result==='En cours').length;
+  // تحديث الامتحانات
+  try {
+    renderExams();
+  } catch(e) {
+    console.error('renderExams:', e);
+  }
 
- document.getElementById('headerSchool').innerHTML=db.school.name;
-}
+  // تحديث التقارير
+  try {
+    renderReports();
+  } catch(e) {
+    console.error('renderReports:', e);
+  }
+
+  // تحديث فضاء المدرب
+  try {
+    renderTrainerSpace();
+  } catch(e) {
+    console.error('renderTrainerSpace:', e);
+  }
+
+  // بيانات المؤسسة
+  const schoolName = document.getElementById('schoolName');
+  const schoolAddress = document.getElementById('schoolAddress');
+  const schoolPhone = document.getElementById('schoolPhone');
+
+  if(schoolName) schoolName.value = db.school?.name || '';
+  if(schoolAddress) schoolAddress.value = db.school?.address || '';
+  if(schoolPhone) schoolPhone.value = db.school?.phone || '';
+
+  // لوحة القيادة
+  const kCandidates = document.getElementById('kCandidates');
+  const kTrainers = document.getElementById('kTrainers');
+  const kVehicles = document.getElementById('kVehicles');
+  const kHours = document.getElementById('kHours');
+  const kScheduled = document.getElementById('kScheduled');
+  const kCancelled = document.getElementById('kCancelled');
+  const kPaid = document.getElementById('kPaid');
+  const kWaiting = document.getElementById('kWaiting');
+
+  if(kCandidates)
+    kCandidates.textContent = db.candidates.length;
+
+  if(kTrainers)
+    kTrainers.textContent = db.trainers.length;
+
+  if(kVehicles)
+    kVehicles.textContent = db.vehicles.length;
+
+  if(kHours)
+    kHours.textContent = db.training
+      .filter(x => x.status === 'منجزة')
+      .reduce((a,x) => a + Number(x.hours || 0), 0);
+
+  if(kScheduled)
+    kScheduled.textContent = db.training
+      .filter(x => x.status === 'مجدولة')
+      .reduce((a,x) => a + Number(x.hours || 0), 0);
+
+  if(kCancelled)
+    kCancelled.textContent = db.training
+      .filter(x => x.status === 'ملغاة')
+      .reduce((a,x) => a + Number(x.hours || 0), 0);
+
+  if(kPaid)
+    kPaid.textContent = db.payments
+      .reduce((a,x) => a + Number(x.amount || 0), 0)
+      .toFixed(3) + ' د.ت';
+
+  if(kWaiting)
+    kWaiting.textContent = db.exams
+      .filter(x => x.result === 'في الانتظار')
+      .length;
+
+  // اسم المؤسسة في رأس المنصة
+  const headerSchool = document.getElementById('headerSchool');
+
+  if(headerSchool)
+    headerSchool.textContent = db.school?.name || 'مدرسة تعليم السياقة';
+  }
 
 // Initialize on load
 renderAll();
