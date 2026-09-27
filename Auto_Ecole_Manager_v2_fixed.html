@@ -547,22 +547,26 @@ const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-
 const KEY='ae_manager_v3';
 
-let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
- professionalCode:'1234',
+const saved=JSON.parse(localStorage.getItem(KEY)||'null')||{};
+
+let db={
+ professionalCode:saved.professionalCode||'1234',
+
  school:{
    name:'مدرسة تعليم السياقة',
    address:'',
-   phone:''
+   phone:'',
+   ...(saved.school||{})
  },
- candidates:[],
- trainers:[],
- vehicles:[],
- training:[],
- payments:[],
- exams:[]
+
+ candidates:Array.isArray(saved.candidates)?saved.candidates:[],
+ trainers:Array.isArray(saved.trainers)?saved.trainers:[],
+ vehicles:Array.isArray(saved.vehicles)?saved.vehicles:[],
+ training:Array.isArray(saved.training)?saved.training:[],
+ payments:Array.isArray(saved.payments)?saved.payments:[],
+ exams:Array.isArray(saved.exams)?saved.exams:[]
 };
 
 function save(){
