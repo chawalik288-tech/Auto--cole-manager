@@ -736,20 +736,20 @@ function renderCandidatePortal(c){
  </table>
  </div>`:'<div class="empty">لا توجد حصص مسجلة</div>'}
 
- <h3>الامتحانات</h3>
- ${exams.length?`
- <div class="table-wrap">
- <table>
- <tr><th>النوع</th><th>التاريخ</th><th>النتيجة</th></tr>
- ${exams.map(x=>`
- <tr>
- <td>${esc(x.type)}</td>
- <td>${esc(x.date)}</td>
- <td>${statusBadge(x.result)}</td>
- </tr>`).join('')}
- </table>
- </div>`:'<div class="empty">لا توجد امتحانات مسجلة</div>'}
- `;
+<h3>الامتحانات</h3>
+${exams.length?`
+<div class="table-wrap">
+<table>
+<tr><th>النوع</th><th>التاريخ</th><th>النتيجة</th></tr>
+${exams.map(x=>`
+<tr>
+<td>${esc(x.type)}</td>
+<td>${esc(x.date)}</td>
+<td>${statusBadge(x.result)}</td>
+</tr>`).join('')}
+</table>
+</div>`:'<div class="empty">لا توجد امتحانات مسجلة</div>'}
+`;
 }
 
 /* ---------- NAVIGATION ---------- */
