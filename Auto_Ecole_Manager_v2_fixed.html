@@ -869,67 +869,7 @@ fillSelect('trainerSpaceSelect',db.trainers,'اختر المدرب',t=>t.name);
    v=>`${v.reg} — ${v.brand} — ${v.category}`
  );
 
-function fillAllSelects(){
 
-  fillSelect(
-    'tCandidate',
-    db.candidates,
-    'اختر المترشح',
-    c=>`${c.name} — ${c.cat}`
-  );
-
-  fillSelect(
-    'pCandidate',
-    db.candidates,
-    'اختر المترشح',
-    c=>`${c.name} — ${c.cat}`
-  );
-
-  fillSelect(
-    'eCandidate',
-    db.candidates,
-    'اختر المترشح',
-    c=>`${c.name} — ${c.cat}`
-  );
-
-  fillSelect(
-    'tTrainer',
-    db.trainers,
-    'اختر المدرب',
-    t=>t.name
-  );
-
-  // المحافظة على المدرب المختار
-  const trainerSpaceSelect=document.getElementById('trainerSpaceSelect');
-  const previousTrainer=
-    trainerSpaceSelect ? trainerSpaceSelect.value : '';
-
-  fillSelect(
-    'trainerSpaceSelect',
-    db.trainers,
-    'اختر المدرب',
-    t=>t.name
-  );
-
-  if(
-    previousTrainer &&
-    db.trainers.some(
-      t=>String(t.id)===String(previousTrainer)
-    )
-  ){
-    trainerSpaceSelect.value=previousTrainer;
-  }
-
-  const available=db.vehicles.filter(
-    v=>v.status==='متاحة'
-  );
-
-  fillSelect(
-    'tVehicle',
-    available,
-    'اختر العربة',
-    v=>`${v.reg} — ${v.brand} — ${v.category}`
-  );
 }
 /* ---------- TRAINING ---------- */
 
