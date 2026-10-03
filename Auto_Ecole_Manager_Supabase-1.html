@@ -56,7 +56,18 @@
 <script>
 const SUPABASE_URL='https://msqfdfmiuehpvancfiia.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ccA0Tj2zxudAN20-Ez0Xkg_h1QnnxbS';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const sb=window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth:{
+      flowType:'pkce',
+      detectSessionInUrl:true,
+      persistSession:true,
+      autoRefreshToken:true
+    }
+  }
+);
 let user=null,profile=null,school=null,schoolId=null,recoveryMode=false,cache={candidates:[],trainers:[],vehicles:[],training:[],payments:[],exams:[]};
 const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const msg=(t,err=false)=>document.getElementById('msg').innerHTML='<div class="msg '+(err?'err':'')+'">'+esc(t)+'</div>';
@@ -186,14 +197,47 @@ async function insert(table,payload){try{payload.school_id=schoolId;let r=await 
 async function del(type,id){if(!confirm('هل تريد حذف هذا السجل؟'))return;const table=type==='training'?'training_sessions':type;let r=await sb.from(table).delete().eq('id',id).eq('school_id',schoolId);if(r.error)return msg(r.error.message,true);await load();msg('تم الحذف.');}
 async function candidateLogin(){const cin=candidateCin.value.trim(),code=candidateCode.value;if(!cin||!code)return msg('أدخل CIN ورمز الدخول.',true);try{let r=await sb.rpc('candidate_portal_login',{p_cin:cin,p_code:code});if(r.error)throw r.error;const d=r.data;if(!d?.ok)throw new Error('بيانات الدخول غير صحيحة.');document.getElementById('candidateLogin').classList.add('hidden');document.getElementById('candidateApp').classList.remove('hidden');document.getElementById('candidateInfo').innerHTML='<b>'+esc(d.candidate?.name||'المترشح')+'</b><br>CIN: '+esc(d.candidate?.cin||cin);document.getElementById('candidateTraining').innerHTML=(d.training||[]).map(x=>`<div class="card">${esc(x.session_date||x.date||'')} — ${esc(x.training_type||x.type||'')} — ${esc(x.status||'')}</div>`).join('')||'لا توجد حصص.';document.getElementById('candidatePayments').innerHTML=(d.payments||[]).map(x=>`<div class="card">${esc(x.payment_date||x.date||'')} — ${esc(x.amount||'')}</div>`).join('')||'لا توجد مدفوعات.';document.getElementById('candidateExams').innerHTML=(d.exams||[]).map(x=>`<div class="card">${esc(x.exam_date||x.date||'')} — ${esc(x.exam_type||x.type||'')} — ${esc(displayResult(x.result))}</div>`).join('')||'لا توجد امتحانات.';}catch(e){msg(e.message||'تعذر الدخول.',true);}}
 (async()=>{
-try{
-const recoveryLink=window.location.search.includes('code=')||window.location.hash.includes('type=recovery')||window.location.hash.includes('access_token=');
-const r=await sb.auth.getSession();
-if(r.data.session&&!recoveryLink){
-try{await context();await load();openApp();}
-catch(e){await sb.auth.signOut();}
-}
-}catch(e){console.error(e)}
+  try{
+    const url=new URL(window.location.href);
+    const code=url.searchParams.get('code');
+
+    if(code){
+      const r=await sb.auth.exchangeCodeForSession(code);
+
+      if(r.error){
+        console.error(r.error);
+        msg('تعذر فتح رابط استرجاع كلمة المرور.',true);
+        return;
+      }
+
+      window.history.replaceState({},document.title,url.pathname);
+
+      showPasswordRecovery();
+      return;
+    }
+
+    const hash=window.location.hash;
+
+    if(hash.includes('type=recovery')){
+      showPasswordRecovery();
+      return;
+    }
+
+    const r=await sb.auth.getSession();
+
+    if(r.data.session){
+      try{
+        await context();
+        await load();
+        openApp();
+      }catch(e){
+        console.error(e);
+        await sb.auth.signOut();
+      }
+    }
+  }catch(e){
+    console.error(e);
+  }
 })();
 </script>
 </body></html>
