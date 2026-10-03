@@ -22,7 +22,11 @@
 <section id="login" class="panel hidden">
 <h2>دخول المهنيين</h2>
 <div class="row"><div><label>البريد الإلكتروني</label><input id="loginEmail" type="email" autocomplete="username"></div><div><label>كلمة المرور</label><input id="loginPassword" type="password" autocomplete="current-password"></div></div>
-<div class="actions"><button class="btn" onclick="login()">دخول</button><button class="btn alt" onclick="home()">رجوع</button></div>
+<div class="actions">
+<button class="btn" onclick="login()">دخول</button>
+<button class="btn alt" onclick="forgotPassword()">نسيت كلمة المرور؟</button>
+<button class="btn alt" onclick="home()">رجوع</button>
+</div>
 </section>
 <section id="candidateLogin" class="panel hidden">
 <h2>فضاء المترشح</h2>
@@ -112,6 +116,23 @@ function showLogin(){document.getElementById('publicHome').classList.add('hidden
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
 function superAdmin(p){return String(p?.role??p?.Role??'').toLowerCase().replaceAll('_',' ')==='super admin';}
 async function context(){const r=await sb.auth.getUser();user=r.data.user;if(!user)return false;let q=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();if(q.error)throw q.error;profile=q.data;if(!superAdmin(profile))throw new Error('هذا الحساب ليس Super Admin.');schoolId=profile.school_id;if(!schoolId)throw new Error('لم يتم ربط حساب Super Admin بمدرسة.');let s=await sb.from('schools').select('*').eq('id',schoolId).single();if(s.error)throw s.error;school=s.data;return true;}
+async function forgotPassword(){
+  const email=document.getElementById('loginEmail').value.trim();
+
+  if(!email){
+    return msg('أدخل البريد الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟».',true);
+  }
+
+  const r=await sb.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://auto-cole-manager.vercel.app'
+  });
+
+  if(r.error){
+    return msg(r.error.message,true);
+  }
+
+  msg('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من البريد الوارد والبريد غير المرغوب فيه.');
+  }
 async function login(){try{const email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;if(!email||!password)return msg('أدخل البريد الإلكتروني وكلمة المرور.',true);let r=await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;await context();await load();openApp();msg('تم تسجيل الدخول بنجاح.');}catch(e){msg(e.message||'فشل الدخول.',true);}}
 async function logout(){await sb.auth.signOut();user=profile=school=null;schoolId=null;cache={candidates:[],trainers:[],vehicles:[],training:[],payments:[],exams:[]};home();msg('تم تسجيل الخروج.');}
 async function load(){if(!schoolId)return;const specs={candidates:'candidates',trainers:'trainers',vehicles:'vehicles',training:'training_sessions',payments:'payments',exams:'exams'};for(const [k,t] of Object.entries(specs)){let r=await sb.from(t).select('*').eq('school_id',schoolId);if(r.error)throw r.error;cache[k]=r.data||[];}renderAll();}
