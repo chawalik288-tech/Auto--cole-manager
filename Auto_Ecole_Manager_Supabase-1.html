@@ -107,10 +107,12 @@ msg('تم تغيير كلمة المرور بنجاح.');
 }
 
 sb.auth.onAuthStateChange((event,session)=>{
-if(event==='PASSWORD_RECOVERY'){
-showPasswordRecovery();
-}
-});  
+  if(event==='PASSWORD_RECOVERY'){
+    setTimeout(()=>{
+      showPasswordRecovery();
+    },300);
+  }
+}); 
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
 function showLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('login').classList.remove('hidden');}
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
@@ -133,6 +135,23 @@ async function forgotPassword(){
 
   msg('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من البريد الوارد والبريد غير المرغوب فيه.');
   }
+async function forgotPassword(){
+  const email=document.getElementById('loginEmail').value.trim();
+
+  if(!email){
+    return msg('أدخل البريد الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟».',true);
+  }
+
+  const r=await sb.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://auto-cole-manager.vercel.app'
+  });
+
+  if(r.error){
+    return msg(r.error.message,true);
+  }
+
+  msg('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من البريد الوارد والبريد غير المرغوب فيه.');
+}
 async function login(){try{const email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;if(!email||!password)return msg('أدخل البريد الإلكتروني وكلمة المرور.',true);let r=await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;await context();await load();openApp();msg('تم تسجيل الدخول بنجاح.');}catch(e){msg(e.message||'فشل الدخول.',true);}}
 async function logout(){await sb.auth.signOut();user=profile=school=null;schoolId=null;cache={candidates:[],trainers:[],vehicles:[],training:[],payments:[],exams:[]};home();msg('تم تسجيل الخروج.');}
 async function load(){if(!schoolId)return;const specs={candidates:'candidates',trainers:'trainers',vehicles:'vehicles',training:'training_sessions',payments:'payments',exams:'exams'};for(const [k,t] of Object.entries(specs)){let r=await sb.from(t).select('*').eq('school_id',schoolId);if(r.error)throw r.error;cache[k]=r.data||[];}renderAll();}
