@@ -119,11 +119,12 @@ msg('تم تغيير كلمة المرور بنجاح.');
 
 sb.auth.onAuthStateChange((event,session)=>{
   if(event==='PASSWORD_RECOVERY'){
+    recoveryMode=true;
     setTimeout(()=>{
       showPasswordRecovery();
     },300);
   }
-}); 
+});
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
 function showLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('login').classList.remove('hidden');}
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
@@ -199,9 +200,13 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
 (async()=>{
   try{
     const url=new URL(window.location.href);
+
+    // رابط استرجاع كلمة المرور عبر PKCE
     const code=url.searchParams.get('code');
 
     if(code){
+      recoveryMode=true;
+
       const r=await sb.auth.exchangeCodeForSession(code);
 
       if(r.error){
@@ -216,16 +221,24 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
       return;
     }
 
+    // رابط استرجاع قديم بنظام hash
     const hash=window.location.hash;
 
     if(hash.includes('type=recovery')){
+      recoveryMode=true;
       showPasswordRecovery();
+      return;
+    }
+
+    // إذا كنا في وضع استرجاع كلمة المرور، لا نفتح المنصة
+    if(recoveryMode){
       return;
     }
 
     const r=await sb.auth.getSession();
 
-    if(r.data.session){
+    // لا تفتح الإدارة أثناء استرجاع كلمة المرور
+    if(r.data.session && !recoveryMode){
       try{
         await context();
         await load();
@@ -235,6 +248,7 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
         await sb.auth.signOut();
       }
     }
+
   }catch(e){
     console.error(e);
   }
