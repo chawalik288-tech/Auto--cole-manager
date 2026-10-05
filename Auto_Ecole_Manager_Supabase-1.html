@@ -188,24 +188,18 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
     // رابط استرجاع كلمة المرور عبر PKCE
     const code=url.searchParams.get('code');
 
-if(code){
-  recoveryMode=true;
+    if(code){
+      recoveryMode=true;
 
-  const r=await sb.auth.exchangeCodeForSession(code);
+      const r=await sb.auth.exchangeCodeForSession(code);
 
-  if(r.error){
-    console.error(r.error);
-    msg('تعذر فتح رابط استرجاع كلمة المرور: '+r.error.message,true);
-    return;
-  }
-
-  window.history.replaceState({},document.title,url.pathname);
-  showPasswordRecovery();
-  return;
-}
+      if(r.error){
+        console.error(r.error);
+        msg('تعذر فتح رابط استرجاع كلمة المرور: '+r.error.message,true);
+        return;
+      }
 
       window.history.replaceState({},document.title,url.pathname);
-
       showPasswordRecovery();
       return;
     }
@@ -226,7 +220,7 @@ if(code){
 
     const r=await sb.auth.getSession();
 
-    // لا تفتح الإدارة أثناء استرجاع كلمة المرور
+    // فتح الإدارة إذا كان هناك تسجيل دخول صالح
     if(r.data.session && !recoveryMode){
       try{
         await context();
