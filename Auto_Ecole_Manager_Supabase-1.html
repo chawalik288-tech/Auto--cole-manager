@@ -56,10 +56,18 @@
 <script>
 const SUPABASE_URL='https://msqfdfmiuehpvancfiia.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ccA0Tj2zxudAN20-Ez0Xkg_h1QnnxbS';
-const sb=window.supabase.createClient(
+const sb = supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_KEY,
   {
+    auth: {
+      flowType: 'implicit',
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
+);
     auth:{
       flowType:'pkce',
       detectSessionInUrl:true,
@@ -188,53 +196,49 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
     // رابط استرجاع كلمة المرور عبر PKCE
     const code=url.searchParams.get('code');
 
-    if(code){
-      recoveryMode=true;
+   // معالجة رابط استرجاع كلمة المرور
+const url = new URL(window.location.href);
+const hash = window.location.hash;
 
-      const r=await sb.auth.exchangeCodeForSession(code);
+// رابط استرجاع جديد بنظام Implicit Flow
+if (
+  hash.includes('type=recovery') ||
+  hash.includes('access_token=')
+) {
+  recoveryMode = true;
 
-      if(r.error){
-        console.error(r.error);
-        msg('تعذر فتح رابط استرجاع كلمة المرور: '+r.error.message,true);
-        return;
-      }
+  // نعطي Supabase فرصة لمعالجة الجلسة الموجودة في الرابط
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-      window.history.replaceState({},document.title,url.pathname);
-      showPasswordRecovery();
-      return;
-    }
+  const s = await sb.auth.getSession();
 
-    // رابط استرجاع قديم بنظام hash
-    const hash=window.location.hash;
-
-    if(hash.includes('type=recovery')){
-      recoveryMode=true;
-      showPasswordRecovery();
-      return;
-    }
-
-    // إذا كنا في وضع استرجاع كلمة المرور، لا نفتح المنصة
-    if(recoveryMode){
-      return;
-    }
-
-    const r=await sb.auth.getSession();
-
-    // فتح الإدارة إذا كان هناك تسجيل دخول صالح
-    if(r.data.session && !recoveryMode){
-      try{
-        await context();
-        await load();
-        openApp();
-      }catch(e){
-        console.error(e);
-        await sb.auth.signOut();
-      }
-    }
-
-  }catch(e){
-    console.error(e);
+  if (!s.data.session) {
+    msg('تعذر فتح جلسة استرجاع كلمة المرور. أعد طلب رابط جديد.', true);
+    return;
   }
-})();
+
+  showPasswordRecovery();
+  return;
+}
+
+// إذا كنا في وضع استرجاع كلمة المرور، لا نفتح المنصة
+if (recoveryMode) {
+  return;
+}
+
+// التحقق من الجلسة العادية
+const r = await sb.auth.getSession();
+
+// فتح الإدارة إذا كان هناك تسجيل دخول صالح
+if (r.data.session && !recoveryMode) {
+  try {
+    await context();
+    await load();
+    openApp();
+  } catch (e) {
+    console.error(e);
+    await sb.auth.signOut();
+  }
+} 
 </script>
 </body></html>
