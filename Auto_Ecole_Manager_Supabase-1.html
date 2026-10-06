@@ -61,18 +61,10 @@ const sb = supabase.createClient(
   SUPABASE_KEY,
   {
     auth: {
-      flowType: 'implicit',
+      flowType: 'pkce',
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true
-    }
-  }
-);
-    auth:{
-      flowType:'pkce',
-      detectSessionInUrl:true,
-      persistSession:true,
-      autoRefreshToken:true
     }
   }
 );
