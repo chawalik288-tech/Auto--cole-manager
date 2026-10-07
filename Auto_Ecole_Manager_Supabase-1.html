@@ -176,7 +176,7 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
 (async()=>{
   try{
     const url = new URL(window.location.href);
-
+const hash = window.location.hash;
     // دعم روابط الاسترجاع القديمة
     if(
       hash.includes('type=recovery') ||
