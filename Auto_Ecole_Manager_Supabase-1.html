@@ -61,7 +61,7 @@ const sb = supabase.createClient(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      flowType: 'pkce',
+      flowType: 'implicit',
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true
@@ -117,14 +117,6 @@ document.getElementById('passwordRecovery').innerHTML=
 msg('تم تغيير كلمة المرور بنجاح.');
 }
 
-sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='PASSWORD_RECOVERY'){
-    recoveryMode=true;
-    setTimeout(()=>{
-      showPasswordRecovery();
-    },300);
-  }
-});
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
 function showLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('login').classList.remove('hidden');}
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
@@ -184,30 +176,6 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
 (async()=>{
   try{
     const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    const hash = window.location.hash;
-
-    // استرجاع كلمة المرور عبر PKCE
-    if(code){
-      recoveryMode = true;
-
-      const recovery = await sb.auth.exchangeCodeForSession(code);
-
-      if(recovery.error){
-        console.error('Recovery error:', recovery.error);
-        msg('تعذر فتح رابط استرجاع كلمة المرور: '+recovery.error.message,true);
-        return;
-      }
-
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.origin + window.location.pathname
-      );
-
-      showPasswordRecovery();
-      return;
-    }
 
     // دعم روابط الاسترجاع القديمة
     if(
