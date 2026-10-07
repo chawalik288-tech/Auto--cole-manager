@@ -190,11 +190,34 @@ async function candidateLogin(){const cin=candidateCin.value.trim(),code=candida
     // ==============================
     // استرجاع كلمة المرور - PKCE
     // ==============================
-    if(code){
-      recoveryMode = true;
-
+    
       const r = await sb.auth.exchangeCodeForSession(code);
+if(code){
+  recoveryMode = true;
 
+  const r = await sb.auth.exchangeCodeForSession(code);
+
+  if(r.error){
+    console.error('Recovery error:', r.error);
+
+    msg(
+      'فشل فتح رابط الاسترجاع: ' +
+      (r.error.message || 'خطأ غير معروف'),
+      true
+    );
+
+    return;
+  }
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+
+  showPasswordRecovery();
+  return;
+  }
       if(r.error){
         console.error(r.error);
         msg('تعذر فتح رابط استرجاع كلمة المرور. أعد طلب رابط جديد.',true);
