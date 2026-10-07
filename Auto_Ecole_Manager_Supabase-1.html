@@ -58,7 +58,7 @@ const SUPABASE_URL='https://msqfdfmiuehpvancfiia.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ccA0Tj2zxudAN20-Ez0Xkg_h1QnnxbS';
 const sb = supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY,
+  SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
       flowType: 'pkce',
@@ -183,54 +183,84 @@ async function del(type,id){if(!confirm('هل تريد حذف هذا السجل�
 async function candidateLogin(){const cin=candidateCin.value.trim(),code=candidateCode.value;if(!cin||!code)return msg('أدخل CIN ورمز الدخول.',true);try{let r=await sb.rpc('candidate_portal_login',{p_cin:cin,p_code:code});if(r.error)throw r.error;const d=r.data;if(!d?.ok)throw new Error('بيانات الدخول غير صحيحة.');document.getElementById('candidateLogin').classList.add('hidden');document.getElementById('candidateApp').classList.remove('hidden');document.getElementById('candidateInfo').innerHTML='<b>'+esc(d.candidate?.name||'المترشح')+'</b><br>CIN: '+esc(d.candidate?.cin||cin);document.getElementById('candidateTraining').innerHTML=(d.training||[]).map(x=>`<div class="card">${esc(x.session_date||x.date||'')} — ${esc(x.training_type||x.type||'')} — ${esc(x.status||'')}</div>`).join('')||'لا توجد حصص.';document.getElementById('candidatePayments').innerHTML=(d.payments||[]).map(x=>`<div class="card">${esc(x.payment_date||x.date||'')} — ${esc(x.amount||'')}</div>`).join('')||'لا توجد مدفوعات.';document.getElementById('candidateExams').innerHTML=(d.exams||[]).map(x=>`<div class="card">${esc(x.exam_date||x.date||'')} — ${esc(x.exam_type||x.type||'')} — ${esc(displayResult(x.result))}</div>`).join('')||'لا توجد امتحانات.';}catch(e){msg(e.message||'تعذر الدخول.',true);}}
 (async()=>{
   try{
-    const url=new URL(window.location.href);
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    const hash = window.location.hash;
 
-    // رابط استرجاع كلمة المرور عبر PKCE
-    const code=url.searchParams.get('code');
+    // ==============================
+    // استرجاع كلمة المرور - PKCE
+    // ==============================
+    if(code){
+      recoveryMode = true;
 
-   // معالجة رابط استرجاع كلمة المرور
-const url = new URL(window.location.href);
-const hash = window.location.hash;
+      const r = await sb.auth.exchangeCodeForSession(code);
 
-// رابط استرجاع جديد بنظام Implicit Flow
-if (
-  hash.includes('type=recovery') ||
-  hash.includes('access_token=')
-) {
-  recoveryMode = true;
+      if(r.error){
+        console.error(r.error);
+        msg('تعذر فتح رابط استرجاع كلمة المرور. أعد طلب رابط جديد.',true);
+        return;
+      }
 
-  // نعطي Supabase فرصة لمعالجة الجلسة الموجودة في الرابط
-  await new Promise(resolve => setTimeout(resolve, 500));
+      // تنظيف الرابط من code
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.origin + window.location.pathname
+      );
 
-  const s = await sb.auth.getSession();
+      showPasswordRecovery();
+      return;
+    }
 
-  if (!s.data.session) {
-    msg('تعذر فتح جلسة استرجاع كلمة المرور. أعد طلب رابط جديد.', true);
-    return;
-  }
+    // ==============================
+    // استرجاع قديم عبر Hash
+    // ==============================
+    if(
+      hash.includes('type=recovery') ||
+      hash.includes('access_token=')
+    ){
+      recoveryMode = true;
 
-  showPasswordRecovery();
-  return;
-}
+      await new Promise(resolve=>setTimeout(resolve,700));
 
-// إذا كنا في وضع استرجاع كلمة المرور، لا نفتح المنصة
-if (recoveryMode) {
-  return;
-}
+      const s = await sb.auth.getSession();
 
-// التحقق من الجلسة العادية
-const r = await sb.auth.getSession();
+      if(!s.data.session){
+        msg('تعذر فتح جلسة استرجاع كلمة المرور. أعد طلب رابط جديد.',true);
+        return;
+      }
 
-// فتح الإدارة إذا كان هناك تسجيل دخول صالح
-if (r.data.session && !recoveryMode) {
-  try {
-    await context();
-    await load();
-    openApp();
-  } catch (e) {
+      showPasswordRecovery();
+      return;
+    }
+
+    // ==============================
+    // لا نفتح الإدارة أثناء الاسترجاع
+    // ==============================
+    if(recoveryMode){
+      return;
+    }
+
+    // ==============================
+    // الجلسة العادية
+    // ==============================
+    const r = await sb.auth.getSession();
+
+    if(r.data.session){
+      try{
+        await context();
+        await load();
+        openApp();
+      }catch(e){
+        console.error(e);
+        await sb.auth.signOut();
+      }
+    }
+
+  }catch(e){
     console.error(e);
-    await sb.auth.signOut();
+    msg(e.message || 'حدث خطأ أثناء تشغيل المنصة.',true);
   }
-} 
+})();
 </script>
 </body></html>
