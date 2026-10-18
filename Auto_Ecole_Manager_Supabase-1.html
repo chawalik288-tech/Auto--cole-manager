@@ -141,9 +141,46 @@ msg('حدث خطأ: ' + (e.message || e), true);
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
 function showLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('login').classList.remove('hidden');}
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
-function superAdmin(p){return String(p?.role??p?.Role??'').toLowerCase().replaceAll('_',' ')==='super admin';}
-async function context(){const r=await sb.auth.getUser();user=r.data.user;if(!user)return false;let q=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();if(q.error)throw q.error;profile=q.data;if(!superAdmin(profile))throw new Error('هذا الحساب ليس Super Admin.');schoolId=profile.school_id;if(!schoolId)throw new Error('لم يتم ربط حساب Super Admin بمدرسة.');let s=await sb.from('schools').select('*').eq('id',schoolId).single();if(s.error)throw s.error;school=s.data;return true;}
-async function forgotPassword(){
+function superAdmin(p){return String(p?.role??p?.Role??'').toLowerCase().replaceAll('_',' ')==='super admin';}async function forgotPassword(){
+async function context(){
+const r = await sb.auth.getUser();
+if(r.error) throw r.error;
+
+user = r.data.user;
+if(!user) return false;
+
+const q = await sb.from('profiles')
+.select('*')
+.eq('id', user.id)
+.maybeSingle();
+
+if(q.error) throw q.error;
+profile = q.data;
+
+if(!profile)
+throw new Error('لم يُعثر على ملف هذا المستخدم في profiles.');
+
+if(!superAdmin(profile))
+throw new Error('هذا الحساب ليس Super Admin.');
+
+schoolId = profile.school_id;
+
+if(!schoolId)
+throw new Error('لم يتم ربط حساب Super Admin بمدرسة.');
+
+const s = await sb.from('schools')
+.select('*')
+.eq('id', schoolId)
+.maybeSingle();
+
+if(s.error) throw s.error;
+
+if(!s.data)
+throw new Error('لم يُعثر على المدرسة المرتبطة بحساب Super Admin.');
+
+school = s.data;
+return true;
+}
   const email=document.getElementById('loginEmail').value.trim();
 
   if(!email){
