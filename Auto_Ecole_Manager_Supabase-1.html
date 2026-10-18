@@ -141,7 +141,12 @@ msg('حدث خطأ: ' + (e.message || e), true);
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
 function showLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('login').classList.remove('hidden');}
 function showCandidateLogin(){document.getElementById('publicHome').classList.add('hidden');document.getElementById('candidateLogin').classList.remove('hidden');}
-function superAdmin(p){return String(p?.role??p?.Role??'').toLowerCase().replaceAll('_',' ')==='super admin';}async function forgotPassword(){
+function superAdmin(p){
+return String(p?.role ?? p?.Role ?? '')
+.toLowerCase()
+.replaceAll('_',' ') === 'super admin';
+}
+
 async function context(){
 const r = await sb.auth.getUser();
 if(r.error) throw r.error;
@@ -180,7 +185,7 @@ throw new Error('لم يُعثر على المدرسة المرتبطة بحسا
 
 school = s.data;
 return true;
-}
+  }
   const email=document.getElementById('loginEmail').value.trim();
 
   if(!email){
