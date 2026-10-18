@@ -64,7 +64,8 @@ const sb = supabase.createClient(
       flowType: 'implicit',
       detectSessionInUrl: true,
       persistSession: true,
-      autoRefreshToken: true
+      autoRefreshToken: true,
+      storage: window.localStorage
     }
   }
 );
