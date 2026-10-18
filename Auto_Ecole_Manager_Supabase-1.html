@@ -175,46 +175,56 @@ async function insert(table,payload){try{payload.school_id=schoolId;let r=await 
 async function del(type,id){if(!confirm('هل تريد حذف هذا السجل؟'))return;const table=type==='training'?'training_sessions':type;let r=await sb.from(table).delete().eq('id',id).eq('school_id',schoolId);if(r.error)return msg(r.error.message,true);await load();msg('تم الحذف.');}
 async function candidateLogin(){const cin=candidateCin.value.trim(),code=candidateCode.value;if(!cin||!code)return msg('أدخل CIN ورمز الدخول.',true);try{let r=await sb.rpc('candidate_portal_login',{p_cin:cin,p_code:code});if(r.error)throw r.error;const d=r.data;if(!d?.ok)throw new Error('بيانات الدخول غير صحيحة.');document.getElementById('candidateLogin').classList.add('hidden');document.getElementById('candidateApp').classList.remove('hidden');document.getElementById('candidateInfo').innerHTML='<b>'+esc(d.candidate?.name||'المترشح')+'</b><br>CIN: '+esc(d.candidate?.cin||cin);document.getElementById('candidateTraining').innerHTML=(d.training||[]).map(x=>`<div class="card">${esc(x.session_date||x.date||'')} — ${esc(x.training_type||x.type||'')} — ${esc(x.status||'')}</div>`).join('')||'لا توجد حصص.';document.getElementById('candidatePayments').innerHTML=(d.payments||[]).map(x=>`<div class="card">${esc(x.payment_date||x.date||'')} — ${esc(x.amount||'')}</div>`).join('')||'لا توجد مدفوعات.';document.getElementById('candidateExams').innerHTML=(d.exams||[]).map(x=>`<div class="card">${esc(x.exam_date||x.date||'')} — ${esc(x.exam_type||x.type||'')} — ${esc(displayResult(x.result))}</div>`).join('')||'لا توجد امتحانات.';}catch(e){msg(e.message||'تعذر الدخول.',true);}}
 (async()=>{
-  try{
-    const url = new URL(window.location.href);
-const hash = window.location.hash;
-    // دعم روابط الاسترجاع القديمة
-    if(
+  try {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+
+    const isRecovery =
       hash.includes('type=recovery') ||
-      hash.includes('access_token=')
-    ){
+      params.get('type') === 'recovery' ||
+      hash.includes('access_token=') ||
+      params.has('code');
+
+    if (isRecovery) {
       recoveryMode = true;
 
-      await new Promise(resolve=>setTimeout(resolve,700));
+      if (params.has('code')) {
+        const code = params.get('code');
+
+        const result = await sb.auth.exchangeCodeForSession(code);
+
+        if (result.error) {
+          msg('تعذر فتح رابط الاسترجاع. اطلب رابطًا جديدًا وافتحه في المتصفح نفسه.', true);
+          return;
+        }
+      }
 
       const sessionResult = await sb.auth.getSession();
 
-      if(!sessionResult.data.session){
-        msg('تعذر فتح جلسة استرجاع كلمة المرور. أعد طلب رابط جديد.',true);
-        return;
+      if (sessionResult.data.session) {
+        showPasswordRecovery();
+      } else {
+        msg('لم يتم فتح جلسة الاسترجاع. اطلب رابطًا جديدًا وافتحه في المتصفح نفسه.', true);
       }
 
-      showPasswordRecovery();
       return;
     }
 
-    // الجلسة العادية
     const sessionResult = await sb.auth.getSession();
 
-    if(sessionResult.data.session){
-      try{
+    if (sessionResult.data.session) {
+      try {
         await context();
         await load();
         openApp();
-      }catch(e){
+      } catch (e) {
         console.error(e);
-        await sb.auth.signOut();
+        msg(e.message || 'تعذر فتح الإدارة.', true);
       }
     }
-
-  }catch(e){
+  } catch (e) {
     console.error(e);
-    msg(e.message || 'حدث خطأ أثناء تشغيل المنصة.',true);
+    msg(e.message || 'حدث خطأ أثناء تشغيل المنصة.', true);
   }
 })();
 </script>
