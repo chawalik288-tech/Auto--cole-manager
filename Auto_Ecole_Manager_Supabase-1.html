@@ -60,13 +60,13 @@ const sb = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY,
   {
-    auth: {
-      flowType: 'implicit',
-      detectSessionInUrl: true,
-      persistSession: true,
-      autoRefreshToken: true,
-      storage: window.localStorage
-    }
+   auth: {
+flowType: 'implicit',
+detectSessionInUrl: true,
+persistSession: true,
+autoRefreshToken: true,
+storage: window.localStorage
+}
   }
 );
 let user=null,profile=null,school=null,schoolId=null,recoveryMode=false,cache={candidates:[],trainers:[],vehicles:[],training:[],payments:[],exams:[]};
