@@ -106,16 +106,36 @@ old.classList.remove('hidden');
 }
 
 async function saveRecoveredPassword(){
-const p=document.getElementById('recoveryNewPass').value;
-const p2=document.getElementById('recoveryNewPass2').value;
-if(!p||!p2)return msg('أدخل كلمة المرور الجديدة وتأكيدها.',true);
-if(p.length<8)return msg('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.',true);
-if(p!==p2)return msg('تأكيد كلمة المرور غير مطابق.',true);
-const r=await sb.auth.updateUser({password:p});
-if(r.error)return msg(r.error.message,true);
-document.getElementById('passwordRecovery').innerHTML=
-'<div class="panel"><h2>✅ تم تغيير كلمة المرور بنجاح</h2><p>يمكنك الآن الدخول إلى المنصة بكلمة المرور الجديدة.</p><button class="btn" onclick="location.reload()">العودة إلى تسجيل الدخول</button></div>';
-msg('تم تغيير كلمة المرور بنجاح.');
+try {
+const p = document.getElementById('recoveryNewPass').value;
+const p2 = document.getElementById('recoveryNewPass2').value;
+
+if(!p || !p2)
+  return msg('أدخل كلمة المرور الجديدة وتأكيدها.', true);
+
+if(p.length < 8)
+  return msg('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', true);
+
+if(p !== p2)
+  return msg('تأكيد كلمة المرور غير مطابق.', true);
+
+const result = await sb.auth.getSession();
+
+if(result.error || !result.data.session){
+  return msg('انتهت جلسة الاسترجاع. اطلب رابطًا جديدًا وافتحه في نفس المتصفح.', true);
+}
+
+const r = await sb.auth.updateUser({ password: p });
+
+if(r.error)
+  return msg('تعذر تغيير كلمة المرور: ' + r.error.message, true);
+
+document.getElementById('passwordRecovery').innerHTML =
+  '<div class="panel"><h2>✅ تم تغيير كلمة المرور بنجاح</h2><p>يمكنك الآن الدخول إلى المنصة بكلمة المرور الجديدة.</p><button class="btn" onclick="location.reload()">العودة إلى تسجيل الدخول</button></div>';
+
+} catch(e) {
+msg('حدث خطأ: ' + (e.message || e), true);
+}
 }
 
 function home(){['login','candidateLogin','candidateApp','app'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('publicHome').classList.remove('hidden');}
