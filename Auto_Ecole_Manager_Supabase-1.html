@@ -185,23 +185,25 @@ throw new Error('لم يُعثر على المدرسة المرتبطة بحسا
 
 school = s.data;
 return true;
-  }
-  const email=document.getElementById('loginEmail').value.trim();
+}
 
-  if(!email){
-    return msg('أدخل البريد الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟».',true);
-  }
+async function forgotPassword(){
+const email = document.getElementById('loginEmail').value.trim();
 
-  const r=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://auto-cole-manager.vercel.app'
-  });
+if(!email){
+return msg('أدخل البريد الإلكتروني أولًا.', true);
+}
 
-  if(r.error){
-    return msg(r.error.message,true);
-  }
+const r = await sb.auth.resetPasswordForEmail(email, {
+redirectTo: 'https://auto-cole-manager.vercel.app'
+});
 
-  msg('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من البريد الوارد والبريد غير المرغوب فيه.');
-  }
+if(r.error){
+return msg('تعذر إرسال رابط الاسترجاع: ' + r.error.message, true);
+}
+
+msg('تم طلب رابط الاسترجاع. تحقق من بريدك الإلكتروني.');
+}
 
 async function login(){try{const email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;if(!email||!password)return msg('أدخل البريد الإلكتروني وكلمة المرور.',true);let r=await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;await context();await load();openApp();msg('تم تسجيل الدخول بنجاح.');}catch(e){msg(e.message||'فشل الدخول.',true);}}
 async function logout(){await sb.auth.signOut();user=profile=school=null;schoolId=null;cache={candidates:[],trainers:[],vehicles:[],training:[],payments:[],exams:[]};home();msg('تم تسجيل الخروج.');}
