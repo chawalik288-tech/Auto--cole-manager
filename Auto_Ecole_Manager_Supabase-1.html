@@ -256,6 +256,7 @@ async function addTrainer(){
   const result = await insert('trainers',{
     name: name,
     first_name: name,
+    last_name: name,
     phone: trPhone.value.trim(),
     categories: trCat.value.trim()
   });
