@@ -279,7 +279,34 @@ function trainerSpace(){document.getElementById('trainerSpace').innerHTML=`<div 
 function settings(){document.getElementById('settings').innerHTML=`<div class="panel"><h2>إعدادات المدرسة</h2><div class="row"><input id="sName" value="${esc(school?.name)}" placeholder="اسم المدرسة"><input id="sAddress" value="${esc(school?.address)}" placeholder="العنوان"><input id="sPhone" value="${esc(school?.phone)}" placeholder="الهاتف"><input id="sCode" value="${esc(school?.access_code)}" placeholder="رمز دخول المهنيين"></div><div class="actions"><button class="btn" onclick="saveSchool()">حفظ إعدادات المدرسة</button></div></div><div class="panel"><h2>🔐 تغيير كلمة المرور</h2><div class="row"><input id="oldPass" type="password" placeholder="كلمة المرور الحالية"><input id="newPass" type="password" placeholder="كلمة المرور الجديدة"><input id="newPass2" type="password" placeholder="تأكيد كلمة المرور"></div><div class="actions"><button class="btn" onclick="changePassword()">تغيير كلمة المرور</button></div></div>`;}
 async function saveSchool(){let r=await sb.from('schools').update({name:sName.value.trim(),address:sAddress.value.trim(),phone:sPhone.value.trim(),access_code:sCode.value.trim()}).eq('id',schoolId);if(r.error)return msg(r.error.message,true);school={...school,name:sName.value.trim(),address:sAddress.value.trim(),phone:sPhone.value.trim(),access_code:sCode.value.trim()};renderAll();msg('تم حفظ إعدادات المدرسة.');}
 async function changePassword(){const a=oldPass.value,b=newPass.value,c=newPass2.value;if(!a||!b)return msg('أدخل كلمة المرور الحالية والجديدة.',true);if(b!==c)return msg('تأكيد كلمة المرور غير مطابق.',true);if(b.length<8)return msg('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.',true);let r=await sb.auth.updateUser({password:b,current_password:a});if(r.error)return msg(r.error.message,true);oldPass.value=newPass.value=newPass2.value='';msg('تم تغيير كلمة المرور بنجاح.');}
-async function insert(table,payload){try{payload.school_id=schoolId;let r=await sb.from(table).insert(payload);if(r.error)throw r.error;await load();msg('تم الحفظ بنجاح.');}catch(e){msg(e.message||'تعذر الحفظ.',true);}}
+async function insert(table, payload) {
+  try {
+    if (!schoolId) {
+      throw new Error('لم يتم تحديد المدرسة المرتبطة بالحساب.');
+    }
+
+    const data = {
+      ...payload,
+      school_id: schoolId
+    };
+
+    const { error } = await sb
+      .from(table)
+      .insert(data);
+
+    if (error) throw error;
+
+    await load();
+
+    msg('تم الحفظ بنجاح.');
+    return true;
+
+  } catch (e) {
+    console.error('Insert error:', e);
+    msg(e.message || 'تعذر الحفظ.', true);
+    return false;
+  }
+}
 async function del(type,id){if(!confirm('هل تريد حذف هذا السجل؟'))return;const table=type==='training'?'training_sessions':type;let r=await sb.from(table).delete().eq('id',id).eq('school_id',schoolId);if(r.error)return msg(r.error.message,true);await load();msg('تم الحذف.');}
 async function candidateLogin(){const cin=candidateCin.value.trim(),code=candidateCode.value;if(!cin||!code)return msg('أدخل CIN ورمز الدخول.',true);try{let r=await sb.rpc('candidate_portal_login',{p_cin:cin,p_code:code});if(r.error)throw r.error;const d=r.data;if(!d?.ok)throw new Error('بيانات الدخول غير صحيحة.');document.getElementById('candidateLogin').classList.add('hidden');document.getElementById('candidateApp').classList.remove('hidden');document.getElementById('candidateInfo').innerHTML='<b>'+esc(d.candidate?.name||'المترشح')+'</b><br>CIN: '+esc(d.candidate?.cin||cin);document.getElementById('candidateTraining').innerHTML=(d.training||[]).map(x=>`<div class="card">${esc(x.session_date||x.date||'')} — ${esc(x.training_type||x.type||'')} — ${esc(x.status||'')}</div>`).join('')||'لا توجد حصص.';document.getElementById('candidatePayments').innerHTML=(d.payments||[]).map(x=>`<div class="card">${esc(x.payment_date||x.date||'')} — ${esc(x.amount||'')}</div>`).join('')||'لا توجد مدفوعات.';document.getElementById('candidateExams').innerHTML=(d.exams||[]).map(x=>`<div class="card">${esc(x.exam_date||x.date||'')} — ${esc(x.exam_type||x.type||'')} — ${esc(displayResult(x.result))}</div>`).join('')||'لا توجد امتحانات.';}catch(e){msg(e.message||'تعذر الدخول.',true);}}
 (async()=>{
