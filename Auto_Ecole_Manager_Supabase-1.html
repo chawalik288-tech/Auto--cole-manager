@@ -246,7 +246,25 @@ async function addCandidate(){
   });
   }
 function trainers(){document.getElementById('trainers').innerHTML=`<div class="panel"><h2>المدربون</h2><div class="row"><input id="trName" placeholder="اسم المدرب"><input id="trPhone" placeholder="الهاتف"><input id="trCat" placeholder="الأصناف"></div><div class="actions"><button class="btn" onclick="addTrainer()">إضافة</button></div></div><div class="panel"><table><tr><th>الاسم</th><th>الهاتف</th><th>الأصناف</th><th></th></tr>${cache.trainers.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.categories||x.category)}</td><td>${rowActions('trainers',x.id)}</td></tr>`).join('')}</table></div>`;}
-async function addTrainer(){if(!trName.value.trim())return msg('أدخل اسم المدرب.',true);await insert('trainers',{name:trName.value.trim(),phone:trPhone.value.trim(),categories:trCat.value.trim()});}
+async function addTrainer(){
+  const name = trName.value.trim();
+
+  if(!name){
+    return msg('أدخل اسم المدرب.', true);
+  }
+
+  const result = await insert('trainers',{
+    name: name,
+    phone: trPhone.value.trim(),
+    categories: trCat.value.trim()
+  });
+
+  if(result !== false){
+    trName.value = '';
+    trPhone.value = '';
+    trCat.value = '';
+  }
+}
 function vehicles(){document.getElementById('vehicles').innerHTML=`<div class="panel"><h2>العربات</h2><div class="row"><input id="vReg" placeholder="رقم التسجيل"><input id="vBrand" placeholder="العلامة"><input id="vCat" placeholder="الصنف"><input id="vStatus" placeholder="الحالة"></div><div class="actions"><button class="btn" onclick="addVehicle()">إضافة</button></div></div><div class="panel"><table><tr><th>التسجيل</th><th>العلامة</th><th>الصنف</th><th>الحالة</th><th></th></tr>${cache.vehicles.map(x=>`<tr><td>${esc(x.registration_number||x.registration||x.reg)}</td><td>${esc(x.brand)}</td><td>${esc(x.category||x.cat)}</td><td>${esc(x.status)}</td><td>${rowActions('vehicles',x.id)}</td></tr>`).join('')}</table></div>`;}
 async function addVehicle(){if(!vReg.value.trim())return msg('أدخل رقم التسجيل.',true);await insert('vehicles',{registration_number:vReg.value.trim(),brand:vBrand.value.trim(),category:vCat.value.trim(),status:vStatus.value.trim()});}
 function training(){document.getElementById('training').innerHTML=`<div class="panel"><h2>التكوين</h2><div class="row"><select id="tC"><option value="">المترشح</option>${cache.candidates.map(x=>`<option value="${x.id}">${esc(x.name||x.first_name)}</option>`).join('')}</select><select id="tT"><option value="">المدرب</option>${cache.trainers.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><select id="tV"><option value="">العربة</option>${cache.vehicles.map(x=>`<option value="${x.id}">${esc(x.registration_number||x.registration||x.reg)}</option>`).join('')}</select><input id="tDate" type="date" value="${today()}"><input id="tMinutes" type="number" min="1" placeholder="المدة بالدقائق"><select id="tType"><option value="نظري">نظري</option><option value="تطبيقي">تطبيقي</option></select><select id="tStatus"><option value="مجدولة">مجدولة</option><option value="منجزة">منجزة</option><option value="ملغاة">ملغاة</option></select></div><div class="actions"><button class="btn" onclick="addTraining()">إضافة حصة</button></div></div><div class="panel"><table><tr><th>المترشح</th><th>المدرب</th><th>العربة</th><th>التاريخ</th><th>المدة</th><th>النوع</th><th>الحالة</th><th></th></tr>${cache.training.map(x=>`<tr><td>${esc(candidateName(x.candidate_id||x.cid))}</td><td>${esc(trainerName(x.trainer_id||x.tid))}</td><td>${esc(vehicleName(x.vehicle_id||x.vid))}</td><td>${esc(x.session_date||x.date)}</td><td>${esc(x.duration_minutes||x.minutes||'')}</td><td>${esc(x.training_type||x.type)}</td><td>${esc(x.status)}</td><td>${rowActions('training',x.id)}</td></tr>`).join('')}</table></div>`;}
